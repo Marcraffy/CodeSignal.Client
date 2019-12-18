@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GraphQL.Client" Version="1.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\aodendaal\abp-appfactory-interfaces\Abp.AppFactory.Interfaces\Abp.AppFactory.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>
