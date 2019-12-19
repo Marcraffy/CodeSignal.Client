@@ -1,4 +1,5 @@
-﻿using CodeSignal.Models;
+﻿using Castle.Core.Logging;
+using CodeSignal.Models;
 using GraphQL.Client;
 using GraphQL.Common.Request;
 using GraphQL.Common.Response;
@@ -15,6 +16,7 @@ namespace CodeSignal.Client
     {
         private readonly Options options;
         private readonly GraphQLClient client;
+        private readonly ILogger logger;
 
         private const string GetTest = @"
 query GetTest($id: ID!) 
@@ -31,7 +33,7 @@ query GetTests($id: ID!)
 }";
 
         private const string CreateTest = @"
-mutation CreateTest($id: ID!, $token: String) 
+mutation CreateTest($id: ID!, $token: String!) 
 {   
     createCompanyTestSession(sessionFields: 
     { 
@@ -43,71 +45,83 @@ mutation CreateTest($id: ID!, $token: String)
     { id, invitationUrl }
 }";
 
-        public Client(Options options)
+        public Client(ILogger logger, Options options)
         {
             this.options = options;
+            this.logger = logger;
+            logger.Debug($"Initialising GraphQL Client on {options.Endpoint}");
             client = new GraphQLClient(options.Endpoint);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", this.options.Key);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            logger.Debug("Initialisation complete");
         }
 
         public async Task<Assessment> GetAssessment(string id)
         {
-            var response = await client.PostAsync(new GraphQLRequest
-            {
-                Query = GetTest,
-                Variables = new { id }
-            });
-
+            logger.Debug($"Getting assessment with Id: {id}");
+            var response = await PostGraphQL(GetTest, new { id });
             return CheckAndGetObject<Assessment>(response);
         }
 
         public async Task<Link> GetAssessmentLink(string id, string token)
         {
-            var response = await client.PostAsync(new GraphQLRequest
-            {
-                Query = GetTests,
-                Variables = new { id }
-            });
+            logger.Debug($"Getting user with token: {token} an invitation link for assessment with Id: {id}");
+            var existingLink = CheckAndGetObject<IList<Session>>(await PostGraphQL(GetTests, new { id }))
+                .FirstOrDefault(session => session.TestTaker.Email.Contains(token));
 
-            var sessions = CheckAndGetObject<IList<Session>>(response);
-            var existingLink = sessions.FirstOrDefault(session => session.TestTaker.Email.Contains(token));
             if (existingLink != null)
             {
                 return existingLink as Link;
             }
 
-            response = await client.PostAsync(new GraphQLRequest
-            {
-                Query = CreateTest,
-                Variables = new { id, token }
-            });
-
-            return CheckAndGetObject<Link>(response);
+            logger.Debug($"Creating an invitation link for assessment with Id: {id} for user with token: {token}");
+            return CheckAndGetObject<Link>(await PostGraphQL(CreateTest, new { id, token }));
         }
 
         private void CheckAndThrowException(GraphQLError[] errors)
         {
             if (errors?.Length > 0)
             {
-                throw new Exception(errors.Aggregate(string.Empty, (acc, val) => acc + val + "\n"));
+                foreach (var error in errors)
+                {
+                    logger.Error(error.Message);
+                }
+                var errorMessages = errors.Aggregate(string.Empty, (output, error) => $"{output}{error.Message}\n");
+                throw new Exception(errorMessages);
             }
         }
 
         private T GetFromJObject<T>(dynamic dynamicObject)
         {
+            logger.Debug($"Deserializing Response");
             var data = (dynamicObject as JObject);
             if (data == null || data.First == null || data.First.First == null)
             {
-                throw new Exception("Failed to resolve dynamic object");
+                const string errorMessage = "Failed to resolve dynamic object";
+                logger.Error(errorMessage);
+                throw new Exception(errorMessage);
             }
-            return data.First.First.ToObject<T>();
+            var output = data.First.First.ToObject<T>();
+            logger.Debug($"Deserialization Complete");
+            return output;
         }
 
         private T CheckAndGetObject<T>(GraphQLResponse response)
         {
+            logger.Debug("Response Recieved");
             CheckAndThrowException(response.Errors);
             return GetFromJObject<T>(response.Data);
+        }
+
+        private async Task<GraphQLResponse> PostGraphQL(string query, dynamic variables)
+        {
+            logger.Debug("Posting GraphQL Request");
+            var request = new GraphQLRequest
+            {
+                Query = query,
+                Variables = variables
+            };
+            return await client.PostAsync(request);
         }
     }
 }

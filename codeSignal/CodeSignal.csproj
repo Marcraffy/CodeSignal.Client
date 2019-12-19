@@ -5,11 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Abp.AppFactory.Interfaces" Version="2.0.0" />
+    <PackageReference Include="Castle.Core" Version="4.4.0" />
     <PackageReference Include="GraphQL.Client" Version="1.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\aodendaal\abp-appfactory-interfaces\Abp.AppFactory.Interfaces\Abp.AppFactory.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
