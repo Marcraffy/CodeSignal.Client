@@ -8,10 +8,11 @@
     <PackageId>CodeSignal.Client</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>A client for the code signal Graph QL API</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Abp.AppFactory.Interfaces" Version="2.1.0" />
+    <PackageReference Include="Abp.AppFactory.Interfaces" Version="2.2.0" />
     <PackageReference Include="Castle.Core" Version="4.4.0" />
     <PackageReference Include="GraphQL.Client" Version="1.0.3" />
   </ItemGroup>
