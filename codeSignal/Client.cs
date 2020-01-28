@@ -1,4 +1,5 @@
 ﻿using Castle.Core.Logging;
+using CodeSignal.Exceptions;
 using CodeSignal.Models;
 using GraphQL.Client;
 using GraphQL.Common.Request;
@@ -87,7 +88,7 @@ mutation CreateTest($id: ID!, $token: String!)
                     logger.Error(error.Message);
                 }
                 var errorMessages = errors.Aggregate(string.Empty, (output, error) => $"{output}{error.Message}\n");
-                throw new Exception(errorMessages);
+                throw new GraphException(errorMessages);
             }
         }
 
@@ -99,7 +100,7 @@ mutation CreateTest($id: ID!, $token: String!)
             {
                 const string errorMessage = "Failed to resolve dynamic object";
                 logger.Error(errorMessage);
-                throw new Exception(errorMessage);
+                throw new DeserializationException(errorMessage);
             }
             var output = data.First.First.ToObject<T>();
             logger.Debug($"Deserialization Complete");
