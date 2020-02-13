@@ -41,12 +41,12 @@ query GetSessions($id: ID!)
 }";
 
         private const string CreateTestMutation = @"
-mutation CreateTest($id: ID!, $token: String!) 
+mutation CreateTest($id: ID!, $name: String!, $surname: String!, $token: String!) 
 {   
     createCompanyTestSession(sessionFields: 
     { 
-        candidateFirstName: $token, 
-        candidateLastName: $token, 
+        candidateFirstName: $name, 
+        candidateLastName: $surname, 
         candidateEmail: $token, 
         testId: $id
     }) 
@@ -78,7 +78,7 @@ mutation CreateTest($id: ID!, $token: String!)
             return CheckAndGetObject<IList<Session>>(response);
         }
 
-        public async Task<Link> GetAssessmentLink(string id, string token)
+        public async Task<Link> GetAssessmentLink(string id, string name, string token)
         {
             logger.Debug($"Getting user with token: {token} an invitation link for assessment with Id: {id}");
             var existingLink = CheckAndGetObject<IList<Session>>(await PostGraphQL(GetInvitiationsQuery, new { id }))
@@ -90,7 +90,7 @@ mutation CreateTest($id: ID!, $token: String!)
             }
 
             logger.Debug($"Creating an invitation link for assessment with Id: {id} for user with token: {token}");
-            return CheckAndGetObject<Link>(await PostGraphQL(CreateTestMutation, new { id, token }));
+            return CheckAndGetObject<Link>(await PostGraphQL(CreateTestMutation, new { id, name, token }));
         }
 
         private void CheckAndThrowException(GraphQLError[] errors)
