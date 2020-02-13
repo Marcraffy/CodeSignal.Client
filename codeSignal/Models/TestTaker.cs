@@ -1,6 +1,6 @@
 ﻿namespace CodeSignal.Models
 {
-    internal class TestTaker
+    public class TestTaker
     {
         public string Email { get; set; }
     }

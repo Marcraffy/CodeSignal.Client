@@ -19,21 +19,28 @@ namespace CodeSignal.Client
         private readonly GraphQLClient client;
         private readonly ILogger logger;
 
-        private const string GetTest = @"
+        private const string GetTestQuery = @"
 query GetTest($id: ID!) 
 { 
     companyTest(id: $id) 
     { id, title, introMessage, outroMessage, duration } 
 }";
 
-        private const string GetTests = @"
-query GetTests($id: ID!) 
+        private const string GetInvitiationsQuery = @"
+query GetInvitiations($id: ID!) 
 {   
     companyTestSessions(companyTestId: $id)
     { id, testTaker { email }, invitationUrl }
 }";
 
-        private const string CreateTest = @"
+        private const string GetSessionsQuery = @"
+query GetSessions($id: ID!) 
+{   
+    companyTestSessions(companyTestId: $id)
+    { id, status, maxScore, startDate, finishDate, testTaker { email }, result { score } }
+}";
+
+        private const string CreateTestMutation = @"
 mutation CreateTest($id: ID!, $token: String!) 
 {   
     createCompanyTestSession(sessionFields: 
@@ -60,14 +67,21 @@ mutation CreateTest($id: ID!, $token: String!)
         public async Task<Assessment> GetAssessment(string id)
         {
             logger.Debug($"Getting assessment with Id: {id}");
-            var response = await PostGraphQL(GetTest, new { id });
+            var response = await PostGraphQL(GetTestQuery, new { id });
             return CheckAndGetObject<Assessment>(response);
+        }
+
+        public async Task<IList<Session>> GetSessions(string id)
+        {
+            logger.Debug($"Getting assessment with Id: {id}");
+            var response = await PostGraphQL(GetSessionsQuery, new { id });
+            return CheckAndGetObject<IList<Session>>(response);
         }
 
         public async Task<Link> GetAssessmentLink(string id, string token)
         {
             logger.Debug($"Getting user with token: {token} an invitation link for assessment with Id: {id}");
-            var existingLink = CheckAndGetObject<IList<Session>>(await PostGraphQL(GetTests, new { id }))
+            var existingLink = CheckAndGetObject<IList<Session>>(await PostGraphQL(GetInvitiationsQuery, new { id }))
                 .FirstOrDefault(session => session.TestTaker.Email.Contains(token));
 
             if (existingLink != null)
@@ -76,7 +90,7 @@ mutation CreateTest($id: ID!, $token: String!)
             }
 
             logger.Debug($"Creating an invitation link for assessment with Id: {id} for user with token: {token}");
-            return CheckAndGetObject<Link>(await PostGraphQL(CreateTest, new { id, token }));
+            return CheckAndGetObject<Link>(await PostGraphQL(CreateTestMutation, new { id, token }));
         }
 
         private void CheckAndThrowException(GraphQLError[] errors)
