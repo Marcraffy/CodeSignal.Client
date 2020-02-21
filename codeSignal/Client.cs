@@ -90,7 +90,8 @@ mutation CreateTest($id: ID!, $name: String!, $surname: String!, $token: String!
             }
 
             logger.Debug($"Creating an invitation link for assessment with Id: {id} for user with token: {token}");
-            return CheckAndGetObject<Link>(await PostGraphQL(CreateTestMutation, new { id, name, token }));
+            var surname = "XXXX";
+            return CheckAndGetObject<Link>(await PostGraphQL(CreateTestMutation, new { id, name, surname, token }));
         }
 
         private void CheckAndThrowException(GraphQLError[] errors)
