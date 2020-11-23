@@ -30,7 +30,7 @@ query GetTest($id: ID!)
 query GetInvitiations($id: ID!) 
 {   
     companyTestSessions(companyTestId: $id)
-    { id, testTaker { email }, invitationUrl }
+    { id, testTaker { email }, invitationUrl, status }
 }";
 
         private const string GetSessionsQuery = @"
@@ -81,12 +81,15 @@ mutation CreateTest($id: ID!, $name: String!, $surname: String!, $token: String!
         public async Task<Link> GetAssessmentLink(string id, string name, string token)
         {
             logger.Debug($"Getting user with token: {token} an invitation link for assessment with Id: {id}");
-            var existingLink = CheckAndGetObject<IList<Session>>(await PostGraphQL(GetInvitiationsQuery, new { id }))
-                .FirstOrDefault(session => session.TestTaker.Email.Contains(token));
 
-            if (existingLink != null)
+            var existingActiveOrPendingLink = CheckAndGetObject<IList<Session>>(await PostGraphQL(GetInvitiationsQuery, new { id }))
+                .FirstOrDefault(session => session.TestTaker.Email.Contains(token) && (session.Status == Abp.AppFactory.Interfaces.AssessmentStatus.Active ||  session.Status == Abp.AppFactory.Interfaces.AssessmentStatus.Pending));
+
+            if (existingActiveOrPendingLink != null)
             {
-                return existingLink as Link;
+                logger.Debug($"Using an existing invitation link for assessment with Id: {id} for user with token: {token}");
+
+                return existingActiveOrPendingLink as Link;
             }
 
             logger.Debug($"Creating an invitation link for assessment with Id: {id} for user with token: {token}");
