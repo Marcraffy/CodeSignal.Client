@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Marc Raftesath</Authors>
+    <Company>Microsoft AppFactory</Company>
+    <Product>CodeSignal Client</Product>
+    <PackageId>CodeSignal.Client</PackageId>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>A client for the code signal Graph QL API</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.0.4</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Abp.AppFactory.Interfaces" Version="2.2.0" />
+    <PackageReference Include="Castle.Core" Version="4.3.1" />
+    <PackageReference Include="GraphQL.Client" Version="1.0.3" />
+  </ItemGroup>
+
+</Project>
